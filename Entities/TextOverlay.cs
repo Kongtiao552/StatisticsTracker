@@ -21,11 +21,11 @@ namespace StatisticsTracker.Entities {
 
             int attempts = 1;
 
-            if (StatTrackerComp.LevelAttempts.TryGetValue(Camera.CurrentScreen, out int att)) {
+            if (ModEntry.LevelAttempts.TryGetValue(Camera.CurrentScreen, out int att)) {
                 attempts = att;
             }
 
-            TextHelper.DrawString(Game1.instance.contentManager.font.MenuFont, $"Attempt: #{attempts}", pointer, Color.White, Vector2.Zero, p_is_outlined: true);
+            TextHelper.DrawString(Game1.instance.contentManager.font.MenuFont, $"Attempt:#{attempts}", pointer, Color.White, Vector2.Zero, p_is_outlined: true);
         }
 
     }
