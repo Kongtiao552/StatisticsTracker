@@ -43,9 +43,11 @@ namespace StatisticsTracker
         [OnLevelEnd]
         public static void OnLevelEnd() {
             SaveLevelStats(LevelAttempts);
+            LevelSessionAttempts.Clear();
         }
 
         public static Dictionary<int, int> LevelAttempts { get; set; } = new Dictionary<int, int>();
+        public static Dictionary<int, int> LevelSessionAttempts { get; set; } = new Dictionary<int, int>();
 
         public static readonly string LevelStatsFilePath = "Level_Stats.txt";
 

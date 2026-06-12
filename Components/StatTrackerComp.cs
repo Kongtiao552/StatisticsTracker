@@ -31,6 +31,12 @@ namespace StatisticsTracker.Components {
                     ModEntry.LevelAttempts[Camera.CurrentScreen] = 1;
                 }
 
+                if (ModEntry.LevelSessionAttempts.ContainsKey(Camera.CurrentScreen)) {
+                    ModEntry.LevelSessionAttempts[Camera.CurrentScreen]++;
+                } else {
+                    ModEntry.LevelSessionAttempts[Camera.CurrentScreen] = 1;
+                }
+
                 LastScreen = Camera.CurrentScreen;
             }
 

@@ -6,26 +6,32 @@ using System.Reflection;
 using JumpKing;
 using JumpKing.Util;
 using StatisticsTracker.Components;
+using JumpKing.Util.Tags;
 
 namespace StatisticsTracker.Entities {
-    public class TextOverlay : Entity {
+    public class TextOverlay : Entity, IForeground {
 
-        public TextOverlay() : base() {
-            GoToFront();
-        }
-
-        public override void Draw() {
+        public void ForegroundDraw() {
             Vector2 pointer = new Vector2(12f, 8f);
 
             pointer.Y += Game1.instance.contentManager.font.MenuFont.LineSpacing;
 
-            int attempts = 1;
+            string attempt;
+            string sessionAttempt;
 
             if (ModEntry.LevelAttempts.TryGetValue(Camera.CurrentScreen, out int att)) {
-                attempts = att;
+                attempt = $"#{att}";
+            } else {
+                attempt = "-";
             }
 
-            TextHelper.DrawString(Game1.instance.contentManager.font.MenuFont, $"Attempt:#{attempts}", pointer, Color.White, Vector2.Zero, p_is_outlined: true);
+            if (ModEntry.LevelSessionAttempts.TryGetValue(Camera.CurrentScreen, out int att1)) {
+                sessionAttempt = $"#{att1}";
+            } else {
+                sessionAttempt = "-";
+            }
+
+            TextHelper.DrawString(Game1.instance.contentManager.font.MenuFont, $"Attempt: {attempt}\nSession: {sessionAttempt}", pointer, Color.White, Vector2.Zero, p_is_outlined: true);
         }
 
     }
