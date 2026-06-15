@@ -8,6 +8,9 @@ using JumpKing.Player;
 using StatisticsTracker.Entities;
 using System.IO;
 using System.Linq;
+using StatisticsTracker.Menu;
+using BehaviorTree;
+using JumpKing.PauseMenu;
 
 namespace StatisticsTracker
 {
@@ -18,7 +21,9 @@ namespace StatisticsTracker
         /// Called by Jump King before the level loads
         /// </summary>
         [BeforeLevelLoad]
-        public static void BeforeLevelLoad() {}
+        public static void BeforeLevelLoad() {
+            ModSettings.InitSettings();
+        }
 
         /// <summary>
         /// Called by Jump King when the level unloads
@@ -44,6 +49,7 @@ namespace StatisticsTracker
         public static void OnLevelEnd() {
             SaveLevelStats(LevelAttempts);
             LevelSessionAttempts.Clear();
+            ModSettings.SaveSettings();
         }
 
         public static Dictionary<int, int> LevelAttempts { get; set; } = new Dictionary<int, int>();
@@ -64,6 +70,11 @@ namespace StatisticsTracker
                 int roomEntries = int.Parse(array[1]);
                 Stats[roomNumber] = roomEntries;
             }
+        }
+
+        [PauseMenuItemSetting]
+        public static IBTSimpleMenuItem CreateToggleInGameOverlayEntry(object factory, GuiFormat format) {
+            return new ToggleInGameOverlay(ModSettings.Instance.HideIngameOverlay);
         }
     }
 }

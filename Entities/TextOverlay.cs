@@ -12,6 +12,8 @@ namespace StatisticsTracker.Entities {
     public class TextOverlay : Entity, IForeground {
 
         public void ForegroundDraw() {
+            if (ModSettings.Instance.HideIngameOverlay) return;
+
             Vector2 pointer = new Vector2(12f, 8f);
 
             pointer.Y += Game1.instance.contentManager.font.MenuFont.LineSpacing;
