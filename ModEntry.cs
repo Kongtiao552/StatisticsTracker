@@ -11,17 +11,21 @@ using System.Linq;
 using StatisticsTracker.Menu;
 using BehaviorTree;
 using JumpKing.PauseMenu;
+using JumpKing;
 
 namespace StatisticsTracker
 {
-    [JumpKingMod("Administrator.StatisticsTracker")]
+    [JumpKingMod("Kongtiao.StatisticsTracker")]
     public static class ModEntry {
+
+        #region Events
 
         /// <summary>
         /// Called by Jump King before the level loads
         /// </summary>
         [BeforeLevelLoad]
         public static void BeforeLevelLoad() {
+            InitRootFolder();
             ModSettings.InitSettings();
         }
 
@@ -52,19 +56,43 @@ namespace StatisticsTracker
             ModSettings.SaveSettings();
         }
 
+        #endregion
+
+        #region Stats
+
+        public const string RootFolder = "./StatsTracker/";
+
+        public static void InitRootFolder() {
+            if (!Directory.Exists(RootFolder)) {
+                Directory.CreateDirectory(RootFolder);
+            }
+        }
+
+        public const string RawLevelStatsFilePath = "Level_Stats_{0}.txt";
+
+        public static string GetLevelName() {
+            return Game1.instance.contentManager.level.Name;
+        }
+
+        public static string GetLevelNameSanitized() {
+            return GetLevelName().Replace(" ", "_");
+        }
+
+        public static string GetLevelStatsFilePath() {
+            return Path.Combine(RootFolder, string.Format(RawLevelStatsFilePath, GetLevelNameSanitized()));
+        }
+
         public static Dictionary<int, int> LevelAttempts { get; set; } = new Dictionary<int, int>();
         public static Dictionary<int, int> LevelSessionAttempts { get; set; } = new Dictionary<int, int>();
 
-        public static readonly string LevelStatsFilePath = "Level_Stats.txt";
-
         public static void SaveLevelStats(Dictionary<int, int> Stats) {
-            File.WriteAllLines(LevelStatsFilePath, Stats.Select(pair => $"{pair.Key}:{pair.Value}"));
+            File.WriteAllLines(GetLevelStatsFilePath(), Stats.Select(pair => $"{pair.Key}:{pair.Value}"));
         }
 
         public static void LoadLevelStats(Dictionary<int, int> Stats) {
-            if (!File.Exists(LevelStatsFilePath)) return;
+            if (!File.Exists(GetLevelStatsFilePath())) return;
 
-            foreach (string line in File.ReadAllLines(LevelStatsFilePath)) {
+            foreach (string line in File.ReadAllLines(GetLevelStatsFilePath())) {
                 string[] array = line.Split(':');
                 int roomNumber = int.Parse(array[0]);
                 int roomEntries = int.Parse(array[1]);
@@ -72,9 +100,16 @@ namespace StatisticsTracker
             }
         }
 
+        #endregion
+
+        #region Menu
+
         [PauseMenuItemSetting]
-        public static IBTSimpleMenuItem CreateToggleInGameOverlayEntry(object factory, GuiFormat format) {
-            return new ToggleInGameOverlay(ModSettings.Instance.HideIngameOverlay);
+        public static IBTSimpleMenuItem CreateHideInGameOverlayEntry(object factory, GuiFormat format) {
+            return new HideInGameOverlay(ModSettings.Instance.HideIngameOverlay);
         }
+
+        #endregion
+
     }
 }

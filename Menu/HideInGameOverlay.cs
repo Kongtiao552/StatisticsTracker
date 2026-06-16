@@ -3,9 +3,9 @@ using JumpKing.PauseMenu.BT.Actions;
 
 namespace StatisticsTracker.Menu {
 
-    public class ToggleInGameOverlay : ITextToggle {
+    public class HideInGameOverlay : ITextToggle {
 
-        public ToggleInGameOverlay(bool p_start_value) : base(p_start_value) {
+        public HideInGameOverlay(bool p_start_value) : base(p_start_value) {
         }
 
         protected override string GetName() {

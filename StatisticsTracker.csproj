@@ -58,7 +58,7 @@
 		<Compile Include="ModSettings.cs" />
 		<Compile Include="Components\StatTrackerComp.cs" />
 		<Compile Include="Entities\TextOverlay.cs" />
-		<Compile Include="Menu\ToggleInGameOverlay.cs" />
+		<Compile Include="Menu\HideInGameOverlay.cs" />
 
 
 		<Compile Include="Properties\AssemblyInfo.cs" />
