@@ -36,16 +36,24 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-		<Reference Include="System"/>
-		<Reference Include="System.Core"/>
-		<Reference Include="System.Xml.Linq"/>
-		<Reference Include="System.Data.DataSetExtensions"/>
-		<Reference Include="Microsoft.CSharp"/>
-		<Reference Include="System.Data"/>
-		<Reference Include="System.Xml"/>
+		<Reference Include="System" />
+		<Reference Include="System.Core" />
+		<Reference Include="System.Xml.Linq" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Data" />
+		<Reference Include="System.Xml" />
 		<Reference Include="JumpKing">
 			<Private>False</Private>
 			<HintPath>D:\Program Files (x86)\Steam\steamapps\common\Jump King\JumpKing.exe</HintPath>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+			<Private>False</Private>
+			<HintPath>D:\Program Files (x86)\Steam\steamapps\common\Jump King\Newtonsoft.Json.dll</HintPath>
+		</Reference>
+		<Reference Include="Lib.Harmony">
+			<Private>True</Private>
+			<HintPath>Harmony/0Harmony.dll</HintPath>
 		</Reference>
 		<Reference Include="MonoGame.Framework, Version=3.7.1.189, Culture=neutral, processorArchitecture=MSIL">
 			<Private>False</Private>
@@ -57,7 +65,6 @@
 		<Compile Include="ModEntry.cs" />
 		<Compile Include="ModSettings.cs" />
 		<Compile Include="Components\StatTrackerComp.cs" />
-		<Compile Include="Entities\TextOverlay.cs" />
 		<Compile Include="Menu\HideInGameOverlay.cs" />
 
 

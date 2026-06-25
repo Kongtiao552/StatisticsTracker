@@ -5,13 +5,18 @@ using StatisticsTracker.Components;
 using EntityComponent;
 using JumpKing.Mods;
 using JumpKing.Player;
-using StatisticsTracker.Entities;
 using System.IO;
 using System.Linq;
 using StatisticsTracker.Menu;
 using BehaviorTree;
 using JumpKing.PauseMenu;
 using JumpKing;
+using HarmonyLib;
+using JumpKing.GameManager;
+using Microsoft.Xna.Framework;
+using JumpKing.Util;
+using System.Reflection;
+using JumpKing.SaveThread;
 
 namespace StatisticsTracker
 {
@@ -27,13 +32,16 @@ namespace StatisticsTracker
         public static void BeforeLevelLoad() {
             InitRootFolder();
             ModSettings.InitSettings();
+            InitHarmony();
         }
 
         /// <summary>
         /// Called by Jump King when the level unloads
         /// </summary>
         [OnLevelUnload]
-        public static void OnLevelUnload() {}
+        public static void OnLevelUnload() {
+            ModSettings.SaveSettings();
+        }
 
         /// <summary>
         /// Called by Jump King when the Level Starts
@@ -43,7 +51,6 @@ namespace StatisticsTracker
             LoadLevelStats(LevelAttempts);
             PlayerEntity player = EntityManager.instance.Find<PlayerEntity>();
             player?.AddComponents(new StatTrackerComp());
-            new TextOverlay();
         }
 
         /// <summary>
@@ -52,8 +59,53 @@ namespace StatisticsTracker
         [OnLevelEnd]
         public static void OnLevelEnd() {
             SaveLevelStats(LevelAttempts);
+            LevelAttempts.Clear();
             LevelSessionAttempts.Clear();
-            ModSettings.SaveSettings();
+        }
+
+        #endregion
+
+        #region Patches
+
+        public const string HarmonyIndentifier = "Kongtiao.StatisticsTracker.Harmony";
+
+        public static void InitHarmony() {
+            Harmony harmony = new Harmony(HarmonyIndentifier);
+
+            harmony.Patch(typeof(GameLoop).GetMethod("DrawIngameOverlayItems"), postfix: AccessTools.Method(typeof(ModEntry), nameof(After_GameLoop_DrawIngameOverlayItems)));
+        }
+
+        public static Type SaveLube_Type = AccessTools.TypeByName("JumpKing.SaveThread.SaveLube");
+        
+        public static PropertyInfo SaveLube_GeneralSettings_Property = AccessTools.Property(SaveLube_Type, "generalSettings");
+
+        public static GeneralSettings SaveLube_GeneralSettings => (GeneralSettings) SaveLube_GeneralSettings_Property.GetValue(null);
+
+        private static void After_GameLoop_DrawIngameOverlayItems() {
+            if (ModSettings.Instance.HideIngameOverlay) return;
+
+            Vector2 pointer = new Vector2(12f, 8f);
+
+            if (SaveLube_GeneralSettings.gui_use_timer) {
+                pointer.Y += Game1.instance.contentManager.font.MenuFont.LineSpacing;
+            }
+
+            string attempt;
+            string sessionAttempt;
+
+            if (LevelAttempts.TryGetValue(Camera.CurrentScreen, out int att)) {
+                attempt = $"#{att}";
+            } else {
+                attempt = "-";
+            }
+
+            if (LevelSessionAttempts.TryGetValue(Camera.CurrentScreen, out int att1)) {
+                sessionAttempt = $"#{att1}";
+            } else {
+                sessionAttempt = "-";
+            }
+
+            TextHelper.DrawString(Game1.instance.contentManager.font.MenuFont, $"Attempt: {attempt}\nSession: {sessionAttempt}", pointer, Color.White, Vector2.Zero, p_is_outlined: true);
         }
 
         #endregion
@@ -85,18 +137,18 @@ namespace StatisticsTracker
         public static Dictionary<int, int> LevelAttempts { get; set; } = new Dictionary<int, int>();
         public static Dictionary<int, int> LevelSessionAttempts { get; set; } = new Dictionary<int, int>();
 
-        public static void SaveLevelStats(Dictionary<int, int> Stats) {
-            File.WriteAllLines(GetLevelStatsFilePath(), Stats.Select(pair => $"{pair.Key}:{pair.Value}"));
+        public static void SaveLevelStats(Dictionary<int, int> stats) {
+            File.WriteAllLines(GetLevelStatsFilePath(), stats.Select(pair => $"{pair.Key}:{pair.Value}"));
         }
 
-        public static void LoadLevelStats(Dictionary<int, int> Stats) {
+        public static void LoadLevelStats(Dictionary<int, int> stats) {
             if (!File.Exists(GetLevelStatsFilePath())) return;
 
             foreach (string line in File.ReadAllLines(GetLevelStatsFilePath())) {
                 string[] array = line.Split(':');
                 int roomNumber = int.Parse(array[0]);
                 int roomEntries = int.Parse(array[1]);
-                Stats[roomNumber] = roomEntries;
+                stats[roomNumber] = roomEntries;
             }
         }
 
