@@ -66,6 +66,12 @@
 		<Compile Include="ModSettings.cs" />
 		<Compile Include="Components\StatTrackerComp.cs" />
 		<Compile Include="Menu\HideInGameOverlay.cs" />
+		<Compile Include="Menu\ExportFirstArrivalTimeSummary.cs" />
+		<Compile Include="Models\Screen.cs" />
+		<Compile Include="Models\LevelStats.cs" />
+		<Compile Include="Utility\SaveData.cs" />
+		<Compile Include="Utility\InternalAccessor.cs" />
+		<Compile Include="Utility\Util.cs" />
 
 
 		<Compile Include="Properties\AssemblyInfo.cs" />

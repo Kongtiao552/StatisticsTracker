@@ -15,8 +15,10 @@ using HarmonyLib;
 using JumpKing.GameManager;
 using Microsoft.Xna.Framework;
 using JumpKing.Util;
-using System.Reflection;
-using JumpKing.SaveThread;
+using StatisticsTracker.Models;
+using Newtonsoft.Json;
+using StatisticsTracker.Utility;
+using JumpKing.PauseMenu.BT;
 
 namespace StatisticsTracker
 {
@@ -65,8 +67,6 @@ namespace StatisticsTracker
 
         #endregion
 
-        #region Patches
-
         public const string HarmonyIndentifier = "Kongtiao.StatisticsTracker.Harmony";
 
         public static void InitHarmony() {
@@ -75,18 +75,18 @@ namespace StatisticsTracker
             harmony.Patch(typeof(GameLoop).GetMethod("DrawIngameOverlayItems"), postfix: AccessTools.Method(typeof(ModEntry), nameof(After_GameLoop_DrawIngameOverlayItems)));
         }
 
-        public static Type SaveLube_Type = AccessTools.TypeByName("JumpKing.SaveThread.SaveLube");
-        
-        public static PropertyInfo SaveLube_GeneralSettings_Property = AccessTools.Property(SaveLube_Type, "generalSettings");
-
-        public static GeneralSettings SaveLube_GeneralSettings => (GeneralSettings) SaveLube_GeneralSettings_Property.GetValue(null);
-
         private static void After_GameLoop_DrawIngameOverlayItems() {
             if (ModSettings.Instance.HideIngameOverlay) return;
 
-            Vector2 pointer = new Vector2(12f, 8f);
+            DrawAttemptTextOverlay();
+        }
 
-            if (SaveLube_GeneralSettings.gui_use_timer) {
+        #region Ingame Overlay
+
+        private static void DrawAttemptTextOverlay() {
+            Vector2 pointer = Util.TopLeft;
+
+            if (InternalAccessor.SaveLubeAccessor.GeneralSettings.gui_use_timer) {
                 pointer.Y += Game1.instance.contentManager.font.MenuFont.LineSpacing;
             }
 
@@ -105,7 +105,7 @@ namespace StatisticsTracker
                 sessionAttempt = "-";
             }
 
-            TextHelper.DrawString(Game1.instance.contentManager.font.MenuFont, $"Attempt: {attempt}\nSession: {sessionAttempt}", pointer, Color.White, Vector2.Zero, p_is_outlined: true);
+            Util.DrawText($"Attempt: {attempt}\nSession: {sessionAttempt}", pointer, Vector2.Zero);
         }
 
         #endregion
@@ -121,6 +121,7 @@ namespace StatisticsTracker
         }
 
         public const string RawLevelStatsFilePath = "Level_Stats_{0}.txt";
+        public const string RawLevelTimeSpentStatsFilePath = "Level_Stats_{0}_Time_Spent.json";
 
         public static string GetLevelName() {
             return Game1.instance.contentManager.level.Name;
@@ -130,26 +131,40 @@ namespace StatisticsTracker
             return GetLevelName().Replace(" ", "_");
         }
 
-        public static string GetLevelStatsFilePath() {
+        public static string GetLevelAttemptStatsFilePath() {
             return Path.Combine(RootFolder, string.Format(RawLevelStatsFilePath, GetLevelNameSanitized()));
+        }
+
+        public static string GetLevelTimeSpentStatsFilePath() {
+            return Path.Combine(RootFolder, string.Format(RawLevelTimeSpentStatsFilePath, GetLevelNameSanitized()));
         }
 
         public static Dictionary<int, int> LevelAttempts { get; set; } = new Dictionary<int, int>();
         public static Dictionary<int, int> LevelSessionAttempts { get; set; } = new Dictionary<int, int>();
 
+        public static LevelStats CurrentLevelStats { get; set; }
+
         public static void SaveLevelStats(Dictionary<int, int> stats) {
-            File.WriteAllLines(GetLevelStatsFilePath(), stats.Select(pair => $"{pair.Key}:{pair.Value}"));
+            File.WriteAllLines(GetLevelAttemptStatsFilePath(), stats.Select(pair => $"{pair.Key}:{pair.Value}"));
+            File.WriteAllText(GetLevelTimeSpentStatsFilePath(), JsonConvert.SerializeObject(CurrentLevelStats, Formatting.Indented));
         }
 
         public static void LoadLevelStats(Dictionary<int, int> stats) {
-            if (!File.Exists(GetLevelStatsFilePath())) return;
+            if (!File.Exists(GetLevelAttemptStatsFilePath())) return;
 
-            foreach (string line in File.ReadAllLines(GetLevelStatsFilePath())) {
+            foreach (string line in File.ReadAllLines(GetLevelAttemptStatsFilePath())) {
                 string[] array = line.Split(':');
                 int roomNumber = int.Parse(array[0]);
                 int roomEntries = int.Parse(array[1]);
                 stats[roomNumber] = roomEntries;
             }
+
+            if (!File.Exists(GetLevelTimeSpentStatsFilePath())) {
+                CurrentLevelStats = new LevelStats();
+                return;
+            }
+
+            CurrentLevelStats = JsonConvert.DeserializeObject<LevelStats>(File.ReadAllText(GetLevelTimeSpentStatsFilePath()));
         }
 
         #endregion
@@ -159,6 +174,11 @@ namespace StatisticsTracker
         [PauseMenuItemSetting]
         public static IBTSimpleMenuItem CreateHideInGameOverlayEntry(object factory, GuiFormat format) {
             return new HideInGameOverlay(ModSettings.Instance.HideIngameOverlay);
+        }
+
+        [PauseMenuItemSetting]
+        public static IBTSimpleMenuItem CreateExportFirstArrivalTimeSummaryEntry(object factory, GuiFormat format) {
+            return new TextButton("Export First Arrival Time Summary", new ExportFirstArrivalTimeSummary());
         }
 
         #endregion

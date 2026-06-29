@@ -2,15 +2,21 @@ using System;
 using System.Collections.Generic;
 using EntityComponent;
 using JumpKing;
-using JumpKing.GameManager.MultiEnding;
 using JumpKing.Level;
 using JumpKing.Player;
 using Microsoft.Xna.Framework;
+using StatisticsTracker.Models;
+using StatisticsTracker.Utility;
 
 namespace StatisticsTracker.Components {
     public class StatTrackerComp : Component {
 
-        private static int LastScreen = -1;
+        private static int CurrentScreen => Camera.CurrentScreen;
+        private static Dictionary<int, int> CurrentLevelAttempts => ModEntry.LevelAttempts;
+        private static Dictionary<int, int> CurrentLevelSessionAttempts => ModEntry.LevelSessionAttempts;
+        private static LevelStats CurrentLevelStats => ModEntry.CurrentLevelStats;
+
+        private int LastScreen = CurrentScreen;
 
         private BodyComp Body;
 
@@ -19,27 +25,28 @@ namespace StatisticsTracker.Components {
         }
 
         protected override void Update(float p_delta) {
-            if (LastScreen == -1) {
-                LastScreen = Camera.CurrentScreen;
-                return;
+            if (CurrentScreen == LastScreen) return;
+
+            if (!Body.IsOnGround) return;
+
+            if (CurrentLevelAttempts.ContainsKey(CurrentScreen)) {
+                CurrentLevelAttempts[CurrentScreen]++;
+            } else {
+                CurrentLevelAttempts[CurrentScreen] = 1;
             }
 
-            if (Camera.CurrentScreen != LastScreen && Body.IsOnGround) {
-                if (ModEntry.LevelAttempts.ContainsKey(Camera.CurrentScreen)) {
-                    ModEntry.LevelAttempts[Camera.CurrentScreen]++;
-                } else {
-                    ModEntry.LevelAttempts[Camera.CurrentScreen] = 1;
-                }
-
-                if (ModEntry.LevelSessionAttempts.ContainsKey(Camera.CurrentScreen)) {
-                    ModEntry.LevelSessionAttempts[Camera.CurrentScreen]++;
-                } else {
-                    ModEntry.LevelSessionAttempts[Camera.CurrentScreen] = 1;
-                }
-
-                LastScreen = Camera.CurrentScreen;
+            if (CurrentLevelSessionAttempts.ContainsKey(CurrentScreen)) {
+                CurrentLevelSessionAttempts[CurrentScreen]++;
+            } else {
+                CurrentLevelSessionAttempts[CurrentScreen] = 1;
+            }
+            
+            // If the screen hasn't been visited before, Add it with the first arrival time
+            if (!CurrentLevelStats.LevelScreens.ContainsKey(CurrentScreen)) {
+                CurrentLevelStats.LevelScreens[CurrentScreen] = new Screen() {FirstArrivalTime = SaveData.GetTimePlayed()};
             }
 
+            LastScreen = Camera.CurrentScreen;
         }
     }
 }

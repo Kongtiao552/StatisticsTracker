@@ -24,7 +24,7 @@ namespace StatisticsTracker {
         }
 
         public static void SaveSettings() {
-            File.WriteAllText(SettingFile, JsonConvert.SerializeObject(Instance));
+            File.WriteAllText(SettingFile, JsonConvert.SerializeObject(Instance, Formatting.Indented));
         }
 
     }
